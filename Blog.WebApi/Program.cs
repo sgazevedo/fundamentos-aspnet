@@ -42,6 +42,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+LoadConfiguration(app);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -58,3 +60,14 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static void LoadConfiguration(WebApplication app)
+{
+  Configuration.JwtKey = app.Configuration.GetValue<string>("JwtKey");
+  Configuration.ApiKeyName = app.Configuration.GetValue<string>("ApiKeyName");
+  Configuration.ApiKey = app.Configuration.GetValue<string>("ApiKey");
+
+  var smtp = new Configuration.SmtpConfiguration();
+  app.Configuration.GetSection("SmtpConfiguration").Bind(smtp);
+  Configuration.Smtp = smtp;
+}
