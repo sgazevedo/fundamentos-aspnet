@@ -9,32 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-// Configure Schema and Challange to Authenticate
-var key = Encoding.ASCII.GetBytes(Configuration.JwtKey);
-builder.Services.AddAuthentication(x =>
-{
-  x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-  x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-  x.TokenValidationParameters = new TokenValidationParameters
-  {
-    ValidateIssuerSigningKey = true,
-    IssuerSigningKey = new SymmetricSecurityKey(key),
-    ValidateIssuer = false,
-    ValidateAudience = false
-  };
-});
-
-builder.Services
-  .AddControllers()
-  .ConfigureApiBehaviorOptions(options =>
-  {
-    options.SuppressModelStateInvalidFilter = true;
-  });
-builder.Services.AddDbContext<BlogDataContext>();
-builder.Services.AddTransient<ITokenService, TokenService>();
-
+ConfigureAuthentication(builder);
+ConfigureMvc(builder);
+ConfigureServices(builder);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -70,4 +47,37 @@ static void LoadConfiguration(WebApplication app)
   var smtp = new Configuration.SmtpConfiguration();
   app.Configuration.GetSection("SmtpConfiguration").Bind(smtp);
   Configuration.Smtp = smtp;
+}
+
+static void ConfigureAuthentication(WebApplicationBuilder builder)
+{
+  var key = Encoding.ASCII.GetBytes(Configuration.JwtKey);
+  builder.Services.AddAuthentication(x =>
+  {
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+  }).AddJwtBearer(x =>
+  {
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+      ValidateIssuerSigningKey = true,
+      IssuerSigningKey = new SymmetricSecurityKey(key),
+      ValidateIssuer = false,
+      ValidateAudience = false
+    };
+  });
+}
+
+static void ConfigureMvc(WebApplicationBuilder builder)
+{
+  builder
+      .Services
+      .AddControllers()
+      .ConfigureApiBehaviorOptions(options => { options.SuppressModelStateInvalidFilter = true; });
+}
+
+static void ConfigureServices(WebApplicationBuilder builder)
+{
+  builder.Services.AddDbContext<BlogDataContext>();
+  builder.Services.AddTransient<ITokenService, TokenService>();
 }
