@@ -12,13 +12,15 @@ namespace Blog.WebApi.Controllers.V1
   [ApiController]
   public class AccountController : ControllerBase
   {
-    private readonly ITokenService _tokenService;
     private readonly BlogDataContext _context;
+    private readonly ITokenService _tokenService;
+    private readonly IEmailService _emailService;
 
-    public AccountController(ITokenService tokenService, BlogDataContext blogDataContext)
+    public AccountController(BlogDataContext blogDataContext, ITokenService tokenService, IEmailService emailService)
     {
-      _tokenService = tokenService;
       _context = blogDataContext;
+      _tokenService = tokenService;
+      _emailService = emailService;
     }
 
     [HttpPost("v1/accounts/")]
@@ -41,6 +43,14 @@ namespace Blog.WebApi.Controllers.V1
       {
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
+
+        _emailService.Send(
+          user.Name, 
+          user.Email, 
+          Configuration.Email.Subject, 
+          Configuration.Email.Body.Replace("{password}", password), 
+          Configuration.Email.FromName, 
+          Configuration.Email.FromEmail);
 
         return Ok(new ResultViewModel<dynamic>(new
         {
@@ -86,8 +96,5 @@ namespace Blog.WebApi.Controllers.V1
         return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
       }
     }
-
-    
-
   }
 }
