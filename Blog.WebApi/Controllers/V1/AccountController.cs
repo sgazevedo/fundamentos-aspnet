@@ -3,6 +3,7 @@ using Blog.Models;
 using Blog.WebApi.Extensions;
 using Blog.WebApi.Services;
 using Blog.WebApi.ViewModels;
+using Blog.WebApi.ViewModels.Accounts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecureIdentity.Password;
