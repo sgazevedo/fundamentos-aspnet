@@ -10,6 +10,8 @@ namespace Blog.WebApi
 
     public static SendEmailConfiguration Email = new();
 
+    public static ImagesConfiguration Images = new();
+
     public class SmtpConfiguration
     {
       public string Host { get; set; }
@@ -24,6 +26,11 @@ namespace Blog.WebApi
       public string FromEmail { get; set; }
       public string Subject { get; set; }
       public string Body { get; set; }
+    }
+
+    public class ImagesConfiguration
+    {
+      public string UrlHost { get; set; }
     }
   }
 }
