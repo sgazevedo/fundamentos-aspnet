@@ -8,7 +8,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+LoadConfiguration(builder);
 ConfigureAuthentication(builder);
 ConfigureMvc(builder);
 ConfigureServices(builder);
@@ -18,8 +18,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
-LoadConfiguration(app);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -34,23 +32,29 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
+
 app.MapControllers();
 
 app.Run();
 
-static void LoadConfiguration(WebApplication app)
+static void LoadConfiguration(WebApplicationBuilder builder)
 {
-  Configuration.JwtKey = app.Configuration.GetValue<string>("JwtKey");
-  Configuration.ApiKeyName = app.Configuration.GetValue<string>("ApiKeyName");
-  Configuration.ApiKey = app.Configuration.GetValue<string>("ApiKey");
+  Configuration.JwtKey = builder.Configuration.GetValue<string>("JwtKey");
+  Configuration.ApiKeyName = builder.Configuration.GetValue<string>("ApiKeyName");
+  Configuration.ApiKey = builder.Configuration.GetValue<string>("ApiKey");
 
   var smtp = new Configuration.SmtpConfiguration();
-  app.Configuration.GetSection("Smtp").Bind(smtp);
+  builder.Configuration.GetSection("Smtp").Bind(smtp);
   Configuration.Smtp = smtp;
 
   var email = new Configuration.SendEmailConfiguration();
-  app.Configuration.GetSection("Email").Bind(email);
+  builder.Configuration.GetSection("Email").Bind(email);
   Configuration.Email = email;
+
+  var images = new Configuration.ImagesConfiguration();
+  builder.Configuration.GetSection("Images").Bind(images);
+  Configuration.Images = images;
 }
 
 static void ConfigureAuthentication(WebApplicationBuilder builder)
