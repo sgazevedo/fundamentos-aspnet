@@ -4,9 +4,11 @@ using Blog.WebApi.Extensions;
 using Blog.WebApi.Services;
 using Blog.WebApi.ViewModels;
 using Blog.WebApi.ViewModels.Accounts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SecureIdentity.Password;
+using System.Text.RegularExpressions;
 
 namespace Blog.WebApi.Controllers.V1
 {
@@ -96,6 +98,44 @@ namespace Blog.WebApi.Controllers.V1
       {
         return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
       }
+    }
+
+    [Authorize]
+    [HttpPost("v1/accounts/upload-image")]
+    public async Task<IActionResult> UploadImage([FromBody] UploadImageViewModel model)
+    {
+      var fileName = $"{Guid.NewGuid()}.jpg";
+      var data = new Regex(@"^data:image\/[a-z]+;base64,").Replace(model.Base64Image, "");
+      var bytes = Convert.FromBase64String(data);
+
+      try
+      {
+        await System.IO.File.WriteAllBytesAsync($"wwwroot/images/{fileName}", bytes);
+      }
+      catch
+      {
+        return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
+      }
+
+      var user = await _context
+          .Users
+          .FirstOrDefaultAsync(x => x.Email == User.Identity.Name);
+
+      if (user == null)
+        return NotFound(new ResultViewModel<Category>("Usuário não encontrado"));
+
+      user.Image = $"{Configuration.Images.UrlHost}{fileName}";
+      try
+      {
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+      }
+      catch
+      {
+        return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
+      }
+
+      return Ok(new ResultViewModel<string>("Imagem alterada com sucesso!", null));
     }
   }
 }
