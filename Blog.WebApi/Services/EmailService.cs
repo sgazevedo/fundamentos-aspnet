@@ -7,6 +7,9 @@ namespace Blog.WebApi.Services
   {
     public bool Send(string toName, string toEmail, string subject, string body, string fromName, string fromEmail)
     {
+      if (!Configuration.Email.EnableEmailSending) 
+        return true;
+
       var smtpClient = new SmtpClient(Configuration.Smtp.Host, Configuration.Smtp.Port)
       {
         Credentials = new NetworkCredential(Configuration.Smtp.UserName, Configuration.Smtp.Password),
