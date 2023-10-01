@@ -59,6 +59,38 @@ namespace Blog.WebApi.Controllers.V1
       }
     }
 
+    [HttpGet("v1/posts/{id:int}")]
+    public async Task<IActionResult> GetById([FromRoute] int id)
+    {
+      try
+      {
+        var post = await _context
+            .Posts
+            .AsNoTracking()
+            .Include(x => x.Author)
+            .Include(x => x.Category)
+            .Select(x => new ListPostsViewModel
+            {
+              Id = x.Id,
+              Title = x.Title,
+              Slug = x.Slug,
+              LastUpdateDate = x.LastUpdateDate,
+              Category = x.Category.Name,
+              Author = $"{x.Author.Name} ({x.Author.Email})"
+            })
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (post is null)
+          return NotFound(new ResultViewModel<Post>("Conteúdo não encontrado"));
+        
+        return Ok(new ResultViewModel<ListPostsViewModel>(post));
+      }
+      catch (Exception)
+      {
+        return StatusCode(500, new ResultViewModel<List<Category>>("05X04 - Falha interna no servidor"));
+      }
+    }
+
     [HttpGet("v1/posts/category/{category}")]
     public async Task<IActionResult> GetByCategoryAsync(
         [FromRoute] string category,
