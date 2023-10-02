@@ -5,6 +5,7 @@ using Blog.WebApi.ViewModels;
 using Blog.WebApi.ViewModels.Categories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Blog.WebApi.Controllers.V1
 {
@@ -13,10 +14,12 @@ namespace Blog.WebApi.Controllers.V1
   public class CategoryController : ControllerBase
   {
     private readonly BlogDataContext _blogDataContext;
+    private readonly IMemoryCache _cache;
 
-    public CategoryController(BlogDataContext blogDataContext)
+    public CategoryController(BlogDataContext blogDataContext, IMemoryCache cache)
     {
       _blogDataContext = blogDataContext;
+      _cache = cache;
     }
 
     [HttpGet("categories")]
@@ -24,8 +27,13 @@ namespace Blog.WebApi.Controllers.V1
     {
       try
       {
-        var categories = await _blogDataContext.Categories.ToListAsync();
-        return Ok(new ResultViewModel<List<Category>>(categories));
+        var categories = await _cache.GetOrCreate("CategoriesCache", entry =>
+        {
+          entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+          return GetCategories();
+        });
+
+        return Ok(new ResultViewModel<IEnumerable<Category>>(categories));
       }
       catch 
       {
@@ -33,14 +41,24 @@ namespace Blog.WebApi.Controllers.V1
       }
     }
 
+    private async Task<IEnumerable<Category>> GetCategories() 
+    {
+      var categories = await _blogDataContext.Categories.ToListAsync();
+      return categories;
+    }
+
     [HttpGet("categories/{id:int}")]
     public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
     {
       try
       {
-        var category = await _blogDataContext.Categories
+        var category = await _cache.GetOrCreate($"{id}-{nameof(Category)}", entry =>
+        {
+          entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);
+          return _blogDataContext.Categories
           .AsNoTracking()
           .FirstOrDefaultAsync(x => x.Id == id);
+        });
 
         if (category is null)
           return NotFound(new ResultViewModel<Category>("Conteúdo não encontrado."));

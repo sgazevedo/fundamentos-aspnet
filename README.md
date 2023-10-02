@@ -10,3 +10,4 @@ Assuntos abordados:
 - Autenticação e Autorização via Token (JWT Token gerado via JWTKey) e ApiKey
 - Envio de e-mail
 - Upload de arquivos estáticos
+- Cache
