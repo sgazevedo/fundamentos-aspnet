@@ -11,3 +11,4 @@ Assuntos abordados:
 - Envio de e-mail
 - Upload de arquivos estáticos
 - Cache
+- Compressão de resposta
