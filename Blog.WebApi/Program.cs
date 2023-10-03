@@ -3,6 +3,7 @@ using Blog.WebApi;
 using Blog.WebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IO.Compression;
 using System.Text;
@@ -107,7 +108,11 @@ static void ConfigureMvc(WebApplicationBuilder builder)
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {
-  builder.Services.AddDbContext<BlogDataContext>();
+  var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+  builder.Services.AddDbContext<BlogDataContext>(options =>
+  {
+    options.UseSqlServer(connectionString);
+  });
   builder.Services.AddTransient<ITokenService, TokenService>();
   builder.Services.AddTransient<IEmailService, EmailService>();
 }
