@@ -22,24 +22,24 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// Configure app to redirect http requests to https requests.
 app.UseHttpsRedirection();
 
 // Configure app to requires Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
+
 app.UseStaticFiles();
 
 app.UseResponseCompression();
 
-app.MapControllers();
+if (app.Environment.IsDevelopment())
+{
+  app.UseSwagger();
+  app.UseSwaggerUI();
+}
 
 app.Run();
 
