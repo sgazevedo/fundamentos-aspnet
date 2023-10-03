@@ -3,6 +3,7 @@ using Blog.WebApi;
 using Blog.WebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IO.Compression;
 using System.Text;
@@ -22,24 +23,24 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// Configure app to redirect http requests to https requests.
 app.UseHttpsRedirection();
 
 // Configure app to requires Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
+
 app.UseStaticFiles();
 
 app.UseResponseCompression();
 
-app.MapControllers();
+if (app.Environment.IsDevelopment())
+{
+  app.UseSwagger();
+  app.UseSwaggerUI();
+}
 
 app.Run();
 
@@ -107,7 +108,11 @@ static void ConfigureMvc(WebApplicationBuilder builder)
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {
-  builder.Services.AddDbContext<BlogDataContext>();
+  var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+  builder.Services.AddDbContext<BlogDataContext>(options =>
+  {
+    options.UseSqlServer(connectionString);
+  });
   builder.Services.AddTransient<ITokenService, TokenService>();
   builder.Services.AddTransient<IEmailService, EmailService>();
 }
